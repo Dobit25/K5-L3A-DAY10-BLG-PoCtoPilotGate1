@@ -84,7 +84,8 @@ Commit `9fc347d` (nhánh `phuc/form-a`) / `e17778b` (trên `main`) cho Câu 1.2 
 
 ### Exit ticket
 
-Chờ Phúc xác nhận nội dung tự đánh giá. Gợi ý theo công việc thực tế (chưa phải lời tự khai): điều học được — cổng an toàn phải đi cùng đối soát, PIC và SLA; điều còn chưa chắc — một người duyệt có giữ SLA khi tỷ lệ ticket dài tăng mạnh vào giờ cao điểm thật hay không.
+- Một điều học được: Phải tách chi phí theo từng kho/phân khúc (kho sỉ HCM-B2B lỗ dù model chạy đúng) và kiểm soát hoàn lặp chéo kênh (CSKH hoàn tay + AI) kèm trần LLM trước khi đọc.
+- Một điều còn chưa chắc: Độ trễ đồng bộ sổ cái hoàn tay giữa CSKH và trợ lý ngoài thực tế, cũng như tải duyệt giờ cao điểm khi mở pilot 4 kho bán lẻ.
 
 ### Sử dụng AI
 
