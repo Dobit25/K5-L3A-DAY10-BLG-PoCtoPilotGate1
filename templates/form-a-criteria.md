@@ -24,8 +24,8 @@ rồi mới chạy đánh giá. Khối 1 không sửa code.
 
 ### Câu 1.2 · Mục tiêu nhìn từ hai người
 
-- Chị Oanh, kế toán đối soát (không dùng trợ lý, nhưng phải khớp sổ với hãng và shop mỗi tuần): …
-- Chị Hạnh, trưởng ca CSKH (phải duyệt những ca trợ lý chuyển sang): …
+- Chị Oanh, kế toán đối soát (không dùng trợ lý, nhưng phải khớp sổ với hãng và shop mỗi tuần): Khi đối soát sổ hàng tuần với hãng vận chuyển và shop, mọi khoản hoàn tiền, trừ tiền shop và lỗi phạt hãng (80.000–150.000đ/lỗi) do trợ lý ghi đều khớp chứng từ (đúng đối tượng chịu chi phí, đúng số tiền báo khách, không ghi lỗi oan cho hãng hay sai phê duyệt) để không làm lệch sổ cái, không phát sinh tranh chấp ngoài phạm vi pilot (PRD v1.1 §2) và không phải rà sửa sổ thủ công.
+- Chị Hạnh, trưởng ca CSKH (phải duyệt những ca trợ lý chuyển sang): Các ca trợ lý chuyển sang người duyệt nằm trong năng lực xử lý ca trực (6 ca/giờ/người, kịp SLA 60 phút, không dồn ùn sang cuối ca 480 phút), đi kèm ghi chú giải thích rõ lý do và đúng người đứng tên duyệt (`NV-HANH`) để trưởng ca duyệt nhanh, đáng tin cậy và duy trì được tỷ lệ kiểm mẫu tối thiểu.
 
 ---
 
@@ -48,12 +48,12 @@ trợ lý có đang gây thiệt hại cho bên ngoài LogiX không; không có 
 
 | | Offline, cho MỘT bước (câu 1.3) | Telemetry production (câu 1.4) |
 |---|---|---|
-| **Bước / hành vi được đo** | | |
-| **Thước đo** (một câu, có đơn vị) | | |
-| **Dữ liệu** (lấy ở đâu, bao nhiêu, ai gán nhãn) | | |
-| **Cách tính** (công thức, mẫu số, cách xử lý ca thiếu dữ liệu) | | |
-| **Khung thời gian / ngưỡng báo động** | (không áp dụng) | |
-| **Điểm mù** (thước đo này KHÔNG thấy gì) | | |
+| **Bước / hành vi được đo** | | Thao tác ghi và gửi thông báo ra bên ngoài LogiX (`file_carrier_fault`, `notify_carrier`, `issue_refund` / trừ tiền shop) trong vận hành thật |
+| **Thước đo** (một câu, có đơn vị) | | Tỉ lệ phần trăm (%) thao tác ghi/gửi ra bên ngoài gây sai sót hoặc bị đảo ngược khi đối soát (ghi lỗi oan hãng, trừ sai shop, lệch sổ báo khách, hoặc lộ PII ngoài danh mục cho phép) |
+| **Dữ liệu** (lấy ở đâu, bao nhiêu, ai gán nhãn) | | Log payload `notify_carrier`, bảng ghi lỗi hãng, sổ cái hoàn tiền/trừ shop và biên bản đối soát tuần của chị Oanh (`NV-OANH`) cùng ticket khiếu nại từ hãng/shop/khách trên production (không có nhãn gán trước) |
+| **Cách tính** (công thức, mẫu số, cách xử lý ca thiếu dữ liệu) | | (Số thao tác ghi ra ngoài bị xác nhận sai khi đối soát/khiếu nại hoặc chứa trường PII ngoài `order_id`, `parcel_id`, `district`, `delay_days`) ÷ (Tổng số thao tác ghi ra ngoài đã đối soát đủ trong kỳ) × 100%; ca phát sinh cuối kỳ chưa kịp đối soát tách sang kỳ sau để không làm sai mẫu số |
+| **Khung thời gian / ngưỡng báo động** | (không áp dụng) | Kiểm payload `notify_carrier` hằng ngày và tổng hợp đối soát với hãng/shop hằng tuần; báo động ĐỎ ngay khi có ≥ 1 ca lộ PII hoặc ≥ 1 ca ghi lỗi hãng/trừ shop bị khiếu nại xác nhận oan (ngưỡng > 0%) |
+| **Điểm mù** (thước đo này KHÔNG thấy gì) | | Không bắt được ngay trong ngày các sai sót ngầm nếu hãng/shop/khách chưa khiếu nại hoặc chưa tới kỳ đối soát tuần; không tự phát hiện lỗi bắt nguồn từ dữ liệu tracking DB gốc bị sai hay drift chính sách theo thời gian (PRD v1.1 §6) |
 
 **Ví dụ mẫu (bước "chọn độ trễ" của agent, đừng chép):**
 Thước đo: tỉ lệ lần chạy mà độ trễ agent dùng để tính tiền khác độ trễ theo tracking DB. Dữ liệu: sự kiện `proposal.delay_days_used`
