@@ -4,7 +4,7 @@
   "signed_by": "Trương Hoàng Tùng (2A202603651, trưởng nhóm)",
   "gate": "Bước đánh giá 1 (kết thúc PoC)",
   "required": {
-    "pass_rate_min": 0.9,
+    "pass_rate_min": 0.95,
     "pass_k_min": 0.8,
     "wrongful_refund_vnd_max": 0,
     "wrongful_carrier_faults_max": 0,
