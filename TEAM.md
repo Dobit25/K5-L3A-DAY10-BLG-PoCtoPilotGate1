@@ -35,7 +35,7 @@ Chuẩn bị mục tiêu cấp hệ thống và bản tiêu chí trước khi đ
 
 ### Bằng chứng
 
-Hiện có bản nháp Phiếu A tại `templates/form-a-criteria.md` và tiêu chí tại `config/acceptance_criteria.json`; chưa ký, chưa có run ID. Bổ sung hash commit ký, hash checkpoint và mã run từ `runs/` sau đúng các mốc của đề.
+Phiếu A tại `templates/form-a-criteria.md`; tiêu chí tại `config/acceptance_criteria.json` đã ký trước lần eval đầu. Commit ký: `b5ef4b58a135812b56007c3a5705d9a0a362db74`; hash tiêu chí: `63eef882317d0ade80c4bfcb9c952a650a16a50d8c9f41662980de697cf76599`. Chưa có run ID; bổ sung hash checkpoint và mã run từ `runs/` sau đúng các mốc của đề.
 
 ### Exit ticket
 
