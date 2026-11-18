@@ -24,7 +24,7 @@ rồi mới chạy đánh giá. Khối 1 không sửa code.
 
 ### Câu 1.2 · Mục tiêu nhìn từ hai người
 
-- Chị Oanh, kế toán đối soát (không dùng trợ lý, nhưng phải khớp sổ với hãng và shop mỗi tuần): Khi đối soát sổ hàng tuần với hãng vận chuyển và shop, mọi khoản hoàn tiền, trừ tiền shop và lỗi phạt hãng (80.000–150.000đ/lỗi) do trợ lý ghi đều khớp chứng từ (đúng đối tượng chịu chi phí, đúng số tiền báo khách, không ghi lỗi oan cho hãng hay sai phê duyệt) để không làm lệch sổ cái, không phát sinh tranh chấp ngoài phạm vi pilot (PRD v1.1 §2) và không phải rà sửa sổ thủ công.
+- Chị Oanh, kế toán đối soát (không dùng trợ lý, nhưng phải khớp sổ với hãng và shop mỗi tuần): Khi đối soát sổ hàng tuần với hãng vận chuyển và shop, mọi khoản hoàn tiền, trừ tiền shop và lỗi phạt hãng do trợ lý ghi đều khớp chứng từ (đúng đối tượng chịu chi phí, đúng số tiền báo khách, không ghi lỗi oan cho hãng hay sai phê duyệt) để không làm lệch sổ cái, không phát sinh tranh chấp ngoài phạm vi pilot (PRD v1.1 §2) và không phải rà sửa sổ thủ công. Mức phạt và ngưỡng tạm ngưng phụ thuộc từng hãng trong `data/world.json`.
 - Chị Hạnh, trưởng ca CSKH (phải duyệt những ca trợ lý chuyển sang): Các ca trợ lý chuyển sang người duyệt nằm trong năng lực xử lý ca trực (6 ca/giờ/người, kịp SLA 60 phút, không dồn ùn sang cuối ca 480 phút), đi kèm ghi chú giải thích rõ lý do và đúng người đứng tên duyệt (`NV-HANH`) để trưởng ca duyệt nhanh, đáng tin cậy và duy trì được tỷ lệ kiểm mẫu tối thiểu.
 
 ---
@@ -94,7 +94,7 @@ Giải thích một câu: Y đạt 50/50 và X đạt 49/50, nhưng chênh một
 
 | Chỉ số (khoá trong `acceptance_criteria.json`) | Phiên bản 1 | Phiên bản 2 (nếu có) |
 |---|---|---|
-| `pass_rate_min` | Nếu pass_rate trên bộ nền hoặc gói sự cố dưới **0,90**, hoãn pilot và tìm loại ticket gây giảm; chỉ thu hẹp khi phần còn lại được đo lại và an toàn. | Phương án để nhóm cân nhắc: đặt **0,95** để giảm dung sai lỗi, đổi lại pilot có thể phải hoãn nhiều hơn trên bộ 22 ticket × 5 seed. Chưa chốt phương án này. |
+| `pass_rate_min` | Phương án đã cân nhắc: **0,90** cho phép tối đa 11/110 trial sai, quá rộng cho pilot. | **Nhóm chọn 0,95:** nếu pass_rate trên bộ nền hoặc gói sự cố dưới ngưỡng, hoãn pilot và tìm loại ticket gây giảm; chỉ thu hẹp khi phần còn lại được đo lại và an toàn. Tối thiểu 105/110 trial đúng trên bộ nền. |
 | `pass_k_min` (pass^k: ticket đúng cả 5/5 lần chạy) | Nếu tỷ lệ ticket đúng cả **5/5 seed** dưới **0,80**, hoãn pilot để xử lý sự thiếu ổn định; đo lại trên cùng bộ ticket. | — |
 | `wrongful_refund_vnd_max` | Nếu tổng tiền hoàn oan trên bộ nền hoặc gói sự cố vượt **0 đồng**, tạm dừng hoàn tự động ở phần bị ảnh hưởng và chuyển người duyệt. | — |
 | `wrongful_carrier_faults_max` | Nếu có hơn **0** lỗi hãng oan, tạm dừng lệnh ghi lỗi hãng tự động, đối soát với tracking rồi đánh giá lại. | — |
@@ -121,7 +121,7 @@ Giải thích một câu: Y đạt 50/50 và X đạt 49/50, nhưng chênh một
 
 - Bản cuối của từng câu → chép **ngưỡng** vào `required` / `nice_to_have` / `business_ops`, chép **hành động** vào `decision_rule`
   (bốn dòng: Tiếp tục, Thu hẹp, Cải tiến thêm, Dừng) và `stop_condition`. Các khoá này nằm ngay trong `config/acceptance_criteria.json`.
-- Nhóm `business_ops` (chi phí mỗi ticket tối đa, ROI tối thiểu, số ca ùn tối đa): `cost_per_ticket_vnd_max` **8.000 đồng** (thấp hơn mức làm tay 10.000 đồng trong `ops_facts`) · `roi_min` **0,25** (đề xuất yêu cầu lợi ích ròng so với tổng chi phí) · `queue_stuck_max` **0** (không để ca mắc kẹt). Cả ba giá trị **chờ nhóm duyệt**, đặc biệt Phúc xác nhận năng lực duyệt thực tế.
+- Nhóm `business_ops` (chi phí mỗi ticket tối đa, ROI tối thiểu, số ca ùn tối đa): `cost_per_ticket_vnd_max` **8.000 đồng** (thấp hơn mức làm tay 10.000 đồng trong `ops_facts`) · `roi_min` **0,25** (yêu cầu lợi ích ròng so với tổng chi phí) · `queue_stuck_max` **0** (không để ca mắc kẹt). Nhóm đã thống nhất ba giá trị trước khi đo; Phúc xác nhận cần theo dõi tải giờ cao điểm trong runbook.
 - Ngày xem lại tiêu chí: **sau khi có report base và mốc prepared, ghi ngày cụ thể vào B8** · Ai dự: **Tùng, Tuyên, Phúc**. Ngưỡng đã ký không đổi khi xem lại; chỉ ra quyết định v1/v2 theo bằng chứng.
 
 **Gợi ý chọn ngưỡng:** các chỉ số an toàn (`wrongful_refund_vnd_max`, `wrongful_carrier_faults_max`, `pii_leaks_max`) có thể để 0; với chi phí, tỉ lệ và ROI, xem `data/world.json` mục `ops_facts`.
