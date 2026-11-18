@@ -30,7 +30,7 @@ Mỗi lệnh `lab10.eval` và `lab10.grade` tự ghi một dòng vào `runs/jour
 
 | # | Mã lần chạy | Bộ ticket · mốc | Đổi MỘT thứ gì so với lần trước | pass_rate (khoảng tin cậy 95%) | pass_k | Hoàn sai (đ) · lỗi hãng oan · lộ dữ liệu | Tỉ lệ chuyển người | Kết luận (một câu) |
 |---|---|---|---|---|---|---|---|---|
-| 1 | | Sx · prepared | nhận thẻ đã bốc, chưa sửa thêm (đúng cổng vòng 1 đã chốt) | | | | | |
+| 1 | `R-S5-prepared-20261118-165749-4133d4` | S5 · prepared | Nhận S5, chưa sửa cổng vòng 2; snapshot vòng 1 `f60329ce` | 0,8 [0,5; 1,0] | 0,8 | 225.000đ · 10 · 0 | 0,1 | Còn hoàn trùng/lỗi hãng oan; LLM tối đa 2.466đ > 1.500đ, ROI 0,06 < 0,25. |
 | 2 | | Sx · after | | | | | | |
 | 3 | | Sx · after | | | | | | |
 | 4 | | base · after | (kiểm không regression) | | | | | |
@@ -47,19 +47,22 @@ Chạy **trước khi sửa bất cứ thứ gì**:
 python3 -m lab10.grade --incident Sx
 ```
 
-- Mã lần chạy grade: `__________` · base: `__________` · prepared: `__________`
-- Cổng vòng 1 đỡ được ô / con số nào (so cột base với cột prepared): …
-- Khối kinh doanh và vận hành còn dòng nào vượt trần: …
+- Mã lần chạy grade: `R-S5-grade-20261118-165749-4133d4` · base: `R-S5-before-20261118-165749-4133d4` · prepared: `R-S5-prepared-20261118-165749-4133d4`.
+- Cổng vòng 1 đưa kho sỉ HCM-B2B (12/30 ticket/ngày, 11.326đ/ticket ở base) ra ngoài pilot; độ phủ còn 10/30 = 0,3333. Chi phí bình quân giảm 6.083 → 5.207đ/ticket, hoàn sai 890.000 → 225.000đ trên 5 seed, lỗi hãng oan 20 → 10. Tuy vậy pass_rate của phần còn trong pilot là 0,8 và chưa đạt ngưỡng 0,95.
+- Vượt trần ở prepared: ticket LLM đắt nhất 2.466đ > 1.500đ; ROI 0,06 < 0,25. Tiền hoàn sai trung bình 45.000đ/ngày làm tiết kiệm ròng chỉ còn 2.926đ/ngày. Hàng chờ 0, PII 0, chi phí vận hành 5.207đ/ticket < 8.000đ vẫn đạt.
+
+**Vấn đề môi trường tự kiểm tra cần báo Lab Coach:** grade trên Windows còn báo integrity FAIL trước mọi sửa vòng 2. `core.autocrlf=true` đã đổi bytes LF trong repo thành CRLF khi checkout (ví dụ `incidents/S5/card.json` có hash Git blob trùng `MANIFEST.json` nhưng hash file làm việc khác); manifest còn liệt kê cả S1–S4 và S6–S8 dù bàn chỉ được lấy S5. Không sửa manifest, file khóa hoặc lấy thêm thẻ để che lỗi này. Vấn đề tách khỏi các lỗi nghiệp vụ S5 đang cần sửa.
 
 **Mở lại pre-mortem (Phiếu B mục B6), viết bằng bút khác màu.** Với thẻ S1, S3, S4, S5 đây là một phần của phần riêng theo thẻ.
 
-- Sự cố trên thẻ thuộc lăng kính nào (kỹ thuật, kinh doanh, con người và vận hành, pháp lý)? …
-- Có nằm trong các lý do bàn đã viết không? Nếu có: cổng vòng 1 đã đỡ được bao nhiêu (đọc cột prepared trong report)? Nếu không: vì sao cả bàn không nghĩ tới? …
+- Sự cố thuộc lăng kính **kỹ thuật** (đọc ledger/ghi lặp), **kinh doanh** (kho sỉ chuyển người và chi phí LLM theo độ dài), **con người và vận hành** (công duyệt). Lăng kính pháp lý vẫn cần giám sát vì prepared còn 10 lỗi hãng oan; PII hiện bằng 0.
+- B6 đã dự báo một nhóm kho không có lời và chi phí duyệt tăng: HCM-B2B 11.326đ/ticket ở base, 100% chuyển người; cổng phạm vi loại nhóm này khỏi prepared. B6 chưa tách rõ tiền mất do khoản hoàn đã có trong `ledger_seed`, cũng chưa dự báo ticket dài làm vượt trần LLM 1.500đ. Prepared còn 225.000đ hoàn sai và 10 lỗi hãng oan trên 5 seed.
 - Lý do còn thiếu, thêm bây giờ:
 
 | Lý do thất bại (viết ở thì quá khứ) | Lăng kính | Kiểm được bằng gì (trace / data / config nào) |
 |---|---|---|
-| | | |
+| Trợ lý đã đọc toàn bộ nội dung ticket dài rồi mới ra quyết định; chi phí LLM tăng theo số ký tự trước khi chuyển người. | Kinh doanh / kỹ thuật | `S5-50@11`, `S5-70@11`; `ops_facts.llm_cost.extract_per_4_chars_vnd`; prepared max 2.466đ. |
+| Sổ cái đã có khoản hoàn từ trước nhưng một yêu cầu sau vẫn tạo khoản hoàn mới cho cùng đơn. | Kỹ thuật / kinh doanh | `world_patch.json.ledger_seed`, cặp `S5-01/S5-02` và `S5-20`; prepared hoàn sai 225.000đ. |
 
 ---
 
@@ -220,8 +223,10 @@ Mở lại Phiếu B mục B3. Ghi ở đây những dòng đổi so với vòng
 
 | Trường / bảng | Vòng 1 bàn đã coi là (nguồn sự thật / bản sao / chưa hỏi) | Sau khi đọc thẻ thì thấy | Ảnh hưởng tới tiền hay lỗi hãng thế nào |
 |---|---|---|---|
-| | | | |
-| | | | |
+| `orders[].warehouse_id` | B3 coi `orders[]` là dữ liệu vận hành để chọn phạm vi | `HCM-B2B` là kho sỉ; S5 base có 12/30 ticket/ngày tại kho này, 100% chuyển người, 11.326đ/ticket; `prepared` HN/HCM loại nhóm này | Tránh trả cả phí trợ lý lẫn 10.000đ công duyệt cho một nhóm vốn vượt hạn mức tự động; phạm vi còn 10/30 ticket/ngày. |
+| `ledger_seed` và các dòng ledger tạo trong cùng ngày | B3 coi ledger là nguồn sự thật về tiền đã ghi nhưng chưa nêu rõ phải xét khoản đã có trước ticket và các ticket cùng đơn | S5 có 3 dòng hoàn có sẵn, gồm hoàn tay của CSKH; cặp `S5-01/S5-02` và `S5-20` đòi hỏi đối chiếu trước khi ghi thêm | Nếu xem mỗi ticket độc lập, khoản hoàn sau có thể trùng khoản cũ; prepared còn 225.000đ hoàn sai trên 5 seed. |
+| `ticket.text` và `ops_facts.llm_cost` | B3 coi ticket là lời khai cần kiểm chứng; chưa tính độ dài chữ thành chi phí | S5-50/S5-70 đính kèm danh sách hàng dài; `extract_per_4_chars_vnd` làm tiền đọc tăng theo ký tự; prepared max 2.466đ/ticket | Giới hạn chi phí 1.500đ/ticket bị vượt dù quyết định cuối có thể đúng; cần chuyển sớm/giới hạn dữ liệu đọc có kiểm chứng. |
+| `policies[].auto_limit_vnd` và `ops_limits` | B3 coi policy và giới hạn là nguồn thật về quyền ghi | Đơn sỉ `S5-51@11` đề xuất 230.000đ rồi chuyển người vì vượt hạn mức tự động; result tốn 565đ trước phí người duyệt | Chỉ số chi phí theo kho phải cộng phí máy và công người; không thể suy từ kết quả `escalated` rằng tự động hóa tiết kiệm. |
 
 ---
 
@@ -249,15 +254,15 @@ Bắt buộc: ít nhất ba dòng, trong đó **một dòng là nhánh bàn chư
 
 ### Câu 3.2 · Một specification mà nếu bị vi phạm thì gây ra tác hại trên thẻ
 
-Kiểm được bằng code hoặc bằng một con số trong report: …
+Ticket đã có khoản hoàn cho cùng đơn/phạm vi quyền lợi trong ledger không được tự động tạo khoản hoàn trùng; tiền LLM mỗi ticket ≤ 1.500đ; pilot giữ `cost_per_ticket_vnd ≤ 8.000đ`, `roi ≥ 0,25`, không có hoàn oan hoặc lỗi hãng oan. Đây là các ràng buộc độc lập: chi phí vận hành thấp không bù được tiền mất do hoàn sai.
 
-Kiểm bằng gì (hàm trong `guards.py`, dòng report nào): …
+Kiểm bằng `write_gate(issue_refund)` đối chiếu ledger trước lệnh ghi; cổng đọc sớm/giới hạn văn bản trước LLM cho trần 1.500đ; các dòng `wrongful_refund_vnd`, `wrongful_carrier_faults`, `ops.cost.llm_cost_max_per_ticket_vnd`, `ops.cost.cost_per_ticket_vnd` và `ops.cost.roi` của report. Cách sửa cụ thể và run sau sửa sẽ ghi ở C7/C8.
 
 ### Câu 3.3 · Một giả định về môi trường mà người thiết kế đã ngầm tin, nhưng nhiều khả năng sai ngoài thực tế
 
-Giả định (thứ nằm NGOÀI phần mềm): …
+Sổ cái từ CSKH và trợ lý được cập nhật đủ nhanh, cùng khóa đơn/khách/phạm vi quyền lợi để cổng nhìn thấy khoản hoàn trước đó trước khi chuyển tiền.
 
-Vì sao có thể sai: …
+Thực tế có thể ghi từ hai hệ thống theo lô hoặc lệch thời gian; `world_patch.json.ledger_seed` đã mô phỏng ba khoản hoàn có trước lượt chạy. Cổng chỉ ngăn hoàn trùng nếu ledger đọc được là nguồn thống nhất tại thời điểm kiểm.
 
 ---
 
@@ -327,6 +332,8 @@ python3 -m lab10.grade --incident Sx
 
 Thêm **ít nhất một hàm** trong `lab10/monitors.py` và đăng ký vào `MONITORS`. Chỉ số `escalation_rate` có sẵn không tính là chỉ số mới.
 Thẻ S5 dùng mục này cho một con số kinh doanh: chi phí mỗi ticket theo kho (tách tiền máy, công người, tiền mất).
+
+**Đặc tả kinh doanh bàn giao cho Tuyên:** Với mỗi kho `w` và ngày/seed, mẫu số là số trial trong kho. Tiền máy = tổng `trial.cost_vnd`; công người = tổng `trial.review_units × 10.000đ` theo `ops_facts.review_cost_per_ticket_vnd`; phí trực 30.000đ/người/ca có thể phân bổ theo tỷ trọng ticket của kho. Tiền mất là hoàn oan thực tế trong report có nhãn; monitor production không có nhãn nên chỉ được dùng proxy như khoản hoàn trùng ledger, phải gọi rõ là *nghi vấn*, không gọi là hoàn oan xác nhận. `ops.segments` hiện chỉ tính tiền máy + công người, **chưa cộng phí trực và tiền mất**. Ở prepared, HN có 8 ticket/ngày, chi phí vận hành theo kho 2.569đ/ticket; HCM có 2 ticket/ngày, 762đ/ticket. Toàn pilot có 10 ticket/ngày, máy 12.074đ + công duyệt 10.000đ + phí trực 30.000đ = 52.074đ/ngày; hoàn oan thêm 45.000đ/ngày làm tiết kiệm ròng còn 2.926đ và ROI 0,06. Nếu *chỉ* loại bỏ được khoản hoàn oan, giữ nguyên các chi phí khác, ROI tính kịch bản là khoảng 0,92; đây chưa phải kết quả chạy sau sửa.
 
 | | Chỉ số theo dõi mới của bàn |
 |---|---|
@@ -418,12 +425,12 @@ Cột v1 nằm ở Phiếu B mục B8; không sửa cột đó.
 
 | | **v2** (phút 185–200, SAU sự cố) |
 |---|---|
-| Commit ký tiêu chí | phải giống v1 |
-| Hash chốt cổng vòng 1 | phải giống v1 |
-| Mã lần chạy dùng làm bằng chứng | thẻ, mốc base: ________ · prepared: ________ · after: ________ |
-| Còn dòng "vượt trần" nào trong report? (hàng chờ, chi phí, ROI, trần tiền, pháp lý) | |
-| Kho hoặc hãng có số xấu nhất: ____. Nếu chỉ nhìn phân khúc này, quyết định có đổi không? *(Khối "theo kho và hãng" trong output `lab10.eval` / `lab10.grade`, hoặc mục `by_segment` trong `report.json`.)* | |
-| Quyết định (khoanh một) | Tiếp tục · Thu hẹp · Cải tiến thêm · Dừng |
+| Commit ký tiêu chí | `b5ef4b58a135812b56007c3a5705d9a0a362db74`, giống v1; tiêu chí không đổi. |
+| Hash chốt cổng vòng 1 | `f60329ce`, giống v1; snapshot không đổi. |
+| Mã lần chạy dùng làm bằng chứng | thẻ base: `R-S5-before-20261118-165749-4133d4` · prepared: `R-S5-prepared-20261118-165749-4133d4` · after: **chờ bản tích hợp vòng 2**. |
+| Còn dòng "vượt trần" nào trong report? | **Prepared, chưa phải after cuối:** LLM max 2.466đ > 1.500đ, ROI 0,06 < 0,25; pass_rate 0,8 < 0,95, hoàn oan 225.000đ và 10 lỗi hãng oan trên 5 seed. Hàng chờ và PII bằng 0. Cập nhật theo report after cuối trước khi quyết định. |
+| Kho hoặc hãng có số xấu nhất | Prepared: HN hoàn oan 125.000đ và 5 lỗi hãng oan; HCM hoàn oan 100.000đ và 5 lỗi hãng oan. Base: HCM-B2B 11.326đ/ticket > làm tay, đã ra ngoài phạm vi v1. Cần xem lại sau bản sửa. |
+| Quyết định (khoanh một) | **Chưa chốt v2.** Nếu giữ nguyên prepared, không được chọn Tiếp tục; quyết định cuối phải dựa trên report after tích hợp. |
 | Bằng chứng 1: mã lần chạy + chỉ số bắt buộc nào đạt / chưa | |
 | Bằng chứng 2 | |
 | Bằng chứng 3 | |
