@@ -93,6 +93,29 @@ def write_gate(ctx, action):
                 ctx.log("refund_approval_invalid", approval_id=approval_id, amount_vnd=amount)
                 return Verdict.escalate("phê duyệt không hợp lệ, hết hạn, sai đơn hoặc không đủ hạn mức")
 
+        limits = ctx.tools.ops_limits()
+        customer_cap = limits.get("max_auto_refund_per_customer_per_day_vnd")
+        if not approval_id and customer_cap is not None:
+            # The global current-day total is a safe lower bound for any one customer.
+            # Only inspect that customer's ledger when the bound could be crossed.
+            if ctx.tools.auto_refund_today_vnd() + amount > customer_cap:
+                prior_auto = sum(row["amount_vnd"] for row in ctx.tools.ledger_rows(
+                    customer_id=order["customer_id"], approval_id=None))
+                if prior_auto + amount > customer_cap:
+                    ctx.log("customer_daily_auto_refund_cap", customer_id=order["customer_id"],
+                            prior_vnd=prior_auto, asked_vnd=amount, cap_vnd=customer_cap)
+                    return Verdict.escalate("vượt trần hoàn tự động cho một khách trong ngày; cần người duyệt")
+
+        # Escalate before moving money when this refund would also require a
+        # third automatic strike for the same carrier in this simulated day.
+        strike_cap = limits.get("max_auto_strikes_per_carrier_per_day")
+        if strike_cap is not None and H.carrier_at_fault(policy, parcel, delay):
+            prior_strikes = len(ctx.tools.fault_rows(carrier_id=parcel.get("carrier_id")))
+            if prior_strikes >= strike_cap:
+                ctx.log("carrier_daily_auto_strike_cap", carrier_id=parcel.get("carrier_id"),
+                        prior_strikes=prior_strikes, cap=strike_cap)
+                return Verdict.escalate("hãng đã chạm trần lỗi tự động trong ngày; cần người duyệt")
+
     elif tool == "file_carrier_fault":
         order_id = action.get("order_id")
         order = ctx.tools.lookup_order(order_id)
@@ -111,6 +134,13 @@ def write_gate(ctx, action):
             ctx.log("carrier_fault_not_supported", parcel_id=parcel.get("parcel_id"),
                     recorded_cause=parcel.get("delay_cause"), db_delay_days=db_delay)
             return Verdict.deny("tracking DB và chính sách hiệu lực không xác nhận lỗi của hãng")
+        strike_cap = ctx.tools.ops_limits().get("max_auto_strikes_per_carrier_per_day")
+        if strike_cap is not None:
+            prior_strikes = len(ctx.tools.fault_rows(carrier_id=parcel.get("carrier_id")))
+            if prior_strikes >= strike_cap:
+                ctx.log("carrier_daily_auto_strike_cap", carrier_id=parcel.get("carrier_id"),
+                        prior_strikes=prior_strikes, cap=strike_cap)
+                return Verdict.escalate("hãng đã chạm trần lỗi tự động trong ngày; cần người duyệt")
 
     elif tool == "notify_carrier":
         ticket_id = action.get("ticket_id")
