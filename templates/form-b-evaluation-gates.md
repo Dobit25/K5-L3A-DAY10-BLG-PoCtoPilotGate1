@@ -32,7 +32,7 @@ Mọi con số trong quyết định Gate 1 phải trỏ về một dòng ở đ
 | 1 | `R-base-before-20261118-160604-bde05c` | base · base | Baseline, chưa dùng cổng của bàn | 0,9909 [0,9727; 1,0] | 0,9545 | 20.000đ · 1 · 0 | 0,2273 | Chưa đạt hai trần an toàn do `T-002@55`. |
 | 2 | `R-base-after-20261118-163430-3cdb2d` | base · after | Chỉ thêm cổng `guards.py`, giữ config vận hành mặc định | 1,0 [1,0; 1,0] | 1,0 | 0đ · 0 · 0 | 0,2364 | An toàn đạt trên 110 trials; chi phí 4.293đ/ticket, ROI 1,33. |
 | 3 | `R-base-after-20261118-163442-4133d4` | base · after | Chỉ đổi cấu hình vận hành/pilot HN-HCM so với lần 2 | 1,0 [1,0; 1,0] | 1,0 | 0đ · 0 · 0 | 0,2462 | Gate exit 0, không có ca mới hỏng; độ phủ 13/22 ticket/ngày. |
-| 4 | Chưa có: chờ `lab10.checkpoint` | base · prepared | Chỉ ghi sau khi cả nhóm duyệt và chốt | Chưa đo | Chưa đo | Chưa đo | Chưa đo | Không dùng số mốc `after` thay cho `prepared`. |
+| 4 | `R-base-prepared-20261118-164010-4133d4` | base · prepared | Chụp cổng vòng 1 đã thống nhất, hash `f60329ce`; không đổi logic so với lần 3 | 1,0 [1,0; 1,0] | 1,0 | 0đ · 0 · 0 | 0,2462 | Gate so baseline exit 0; không có ca mới hỏng, không vượt trần. |
 
 Lần chạy thăm dò tích hợp trước khi tách hai thay đổi: `R-base-after-20261118-162807-4133d4`; kết quả trùng lần 3, không dùng làm căn cứ đổi một thứ.
 
@@ -219,7 +219,7 @@ Trạng thái: **Xong** (có bằng chứng) · **Chưa** · **Không áp dụng
 | 6 | Chi phí | Khối "kinh doanh và vận hành" của report: chi phí mỗi ticket so với làm tay, ROI, tiền LLM ticket đắt nhất; `config/operating_gates.json` mục `business` | Chi phí ≤ 8.000đ/ticket (làm tay 10.000đ), ROI ≥ 0,25, không vượt trần ngày | Chưa | Có baseline `R-base-before-20261118-160604-bde05c`; chờ điền `business` (B7.4) và chạy `base --stage after` | Trương Hoàng Tùng |
 | 7 | Vận hành | Runbook (Phiếu B mục B7.5–B7.6) + `config/operating_gates.json` mục `operations` (PIC, người duyệt, số người trực, điều kiện dừng, kênh báo tin) + metric trong `monitors.py` | Đủ PIC, người duyệt `NV-HANH`, runbook 1–3 khớp config; thêm monitor ở vòng 2 | Một phần | Runbook 1–3 và `operations` đã hợp nhất, khớp pilot HN/HCM; `monitors.py` chờ vòng 2 | Đỗ Hoàng Phúc |
 | 8 | Con người, pháp lý | Bên thứ ba (hãng, tài xế, shop, người nhận quà, người đứng tên duyệt); `config/operating_gates.json` mục `legal`; thẻ S6, S7, S8 có mục riêng ở Phiếu C mục C3 | Không gửi PII sang hãng (`pii_leaks = 0`), chỉ ghi lỗi hãng khi có nguyên nhân tracking | Chưa | B4 ngoài kỹ thuật (`Dữ liệu gửi bên thứ ba`) + đề xuất mục `legal` (`pii_fields_blocked_to_third_party`, `carrier_fault_requires_recorded_cause`) | Đỗ Hoàng Phúc |
-| 9 | Quyết định | Câu tiêu chí (Phiếu A mục A4) + hash Bản tiêu chí đã ký + quyết định Gate 1 (Phiếu B mục B8, Phiếu C mục C12) | Tiêu chí ký trước khi đo; quyết định v1/v2 khớp bằng chứng | Chưa | Đã ký tiêu chí (commit `b5ef4b5`, hash `63eef882...`) và điền Phiếu A (A4); chờ chốt quyết định v1 ở B8 và v2 ở C12 | Trương Hoàng Tùng |
+| 9 | Quyết định | Câu tiêu chí (Phiếu A mục A4) + hash Bản tiêu chí đã ký + quyết định Gate 1 (Phiếu B mục B8, Phiếu C mục C12) | Tiêu chí ký trước khi đo; quyết định v1/v2 khớp bằng chứng | Một phần | Đã ký tiêu chí (commit `b5ef4b5`, hash `63eef882...`); B8 v1 Thu hẹp dựa trên prepared `R-base-prepared-20261118-164010-4133d4`, checkpoint `f60329ce`; C12 v2 chờ vòng 2 | Trương Hoàng Tùng |
 
 Ô "Chưa" có rủi ro cao → chuyển thành một dòng Risk register (Phiếu C mục C10).
 
@@ -396,21 +396,21 @@ bao nhiêu thời gian? (3) Có phần nào của dự án không nên làm ti�
 | | **v1** (phút 105–115, TRƯỚC khi nhận thẻ sự cố) |
 |---|---|
 | Commit ký tiêu chí (message `Sign acceptance criteria`; hash commit, tuỳ chọn) | `b5ef4b58a135812b56007c3a5705d9a0a362db74`; hash file tiêu chí `63eef882317d0ade80c4bfcb9c952a650a16a50d8c9f41662980de697cf76599`. |
-| Hash chốt cổng vòng 1 (8 ký tự lệnh `lab10.checkpoint` in ra, tuỳ chọn) | **Chưa có; chưa chạy checkpoint theo yêu cầu trưởng nhóm.** |
-| Mã lần chạy dùng làm bằng chứng | base: `R-base-before-20261118-160604-bde05c`; guard-only: `R-base-after-20261118-163430-3cdb2d`; tích hợp after: `R-base-after-20261118-163442-4133d4`; prepared: **chờ checkpoint**. |
-| Còn dòng "vượt trần" nào trong report? | Bản tích hợp after: không; hàng chờ 0, chi phí 5.641đ/ticket, ROI 0,77, hoàn tự động 155.000đ/ngày dưới trần 1.800.000đ, hoàn oan/lỗi hãng oan/PII đều 0. |
+| Hash chốt cổng vòng 1 (8 ký tự lệnh `lab10.checkpoint` in ra, tuỳ chọn) | `f60329ce`; snapshot `lab10/guards_round1.py`, `config/operating_gates.round1.json` và `config/round1.lock`. |
+| Mã lần chạy dùng làm bằng chứng | base: `R-base-before-20261118-160604-bde05c`; guard-only: `R-base-after-20261118-163430-3cdb2d`; tích hợp after: `R-base-after-20261118-163442-4133d4`; **prepared: `R-base-prepared-20261118-164010-4133d4`**. |
+| Còn dòng "vượt trần" nào trong report? | Bản prepared: không; hàng chờ 0, chi phí 5.641đ/ticket, ROI 0,77, hoàn tự động 155.000đ/ngày dưới trần 1.800.000đ, hoàn oan/lỗi hãng oan/PII đều 0. |
 | Kho hoặc hãng có số xấu nhất | Kho không xác định `?`: 5 trials, 10.359đ/ticket, cao hơn làm tay 10.000đ; đây là 1 loại ticket/ngày được mô phỏng tính vào pilot dù kho không thuộc HN/HCM. Nếu chỉ xét phân khúc này, không mở rộng tự động hóa; chuyển người và giám sát chi phí. |
-| Quyết định (dự thảo, chờ nhóm xem report và mốc prepared) | **Thu hẹp** vào HN/HCM, chưa chốt Gate 1. Không tiếp nhận thẻ sự cố trước khi hoàn thành checkpoint. |
-| Bằng chứng 1 | `R-base-after-20261118-163442-4133d4`: pass_rate 1,0 [1,0; 1,0], pass_k 1,0, hoàn oan/lỗi hãng oan/PII đều 0. Gate so baseline exit 0, không có ca mới hỏng. |
+| Quyết định Gate 1 · v1 (nhóm đã thống nhất) | **Thu hẹp pilot vào HN/HCM**; ca kho không xác định `?` chuyển người duyệt. Đã chốt vòng 1; chưa nhận thẻ sự cố ở bước này. |
+| Bằng chứng 1 | `R-base-prepared-20261118-164010-4133d4`: pass_rate 1,0 [1,0; 1,0], pass_k 1,0, hoàn oan/lỗi hãng oan/PII đều 0. Gate so baseline exit 0, không có ca mới hỏng. |
 | Bằng chứng 2 | Cùng run: escalation 0,2462 ≤ 0,35; queue_stuck 0; chi phí 5.641đ ≤ 8.000đ; ROI 0,77 ≥ 0,25; độ phủ 13/22 = 0,5909. |
 | Bằng chứng 3 | `R-base-before-20261118-160604-bde05c` có hoàn oan 20.000đ và 1 lỗi hãng oan ở `T-002@55`; `R-base-after-20261118-163430-3cdb2d` sửa được trên 110 trials trước khi thu hẹp phạm vi. |
-| Khớp dòng nào trong `decision_rule` đã ký? | Dòng **Thu hẹp**: giới hạn pilot vào phần có độ phủ > 0 và chỉ triển khai khi chỉ số an toàn đạt, có PIC và lịch kiểm lại. Quyết định chính thức còn cần prepared và cả nhóm xem. |
+| Khớp dòng nào trong `decision_rule` đã ký? | Dòng **Thu hẹp**: giới hạn pilot vào phần có độ phủ > 0; bản prepared có các chỉ số an toàn đạt, PIC `NV-TUNG` và lịch kiểm lại sau vòng sự cố. |
 | Nếu Thu hẹp: cắt phần nào, vì sao | Không mở pilot tự động tại CT/DN; tập trung HN/HCM theo chi phí và độ phủ. Ca kho `?` vẫn xuất hiện do logic mô phỏng `ops.in_scope`; tiếp tục chuyển người và theo dõi chi phí riêng. |
-| Nếu Cải tiến thêm | Không chọn ở dự thảo; kiểm lại routing ca kho `?` và tải giờ cao điểm trước mở rộng. PIC `NV-TUNG` / `NV-HANH`; xem lại sau prepared. |
-| Nếu Dừng | Không chọn ở dự thảo; điều kiện dừng ghi trong runbook. |
-| Một bằng chứng còn thiếu | Run `base --stage prepared` sau checkpoint; thử giờ cao điểm thực tế và gói sự cố chưa có ở CP3. |
-| Ngày quyết định lại | Ngay sau khi cả nhóm xem report tích hợp và chạy checkpoint/prepared; chưa ấn định giờ. |
-| PIC ký | **Chưa ký quyết định Gate 1.** Trưởng nhóm Trương Hoàng Tùng duyệt sau khi nhận ý kiến Tuyên và Phúc. |
+| Nếu Cải tiến thêm | Không chọn ở v1; kiểm lại routing ca kho `?` và tải giờ cao điểm trước mở rộng. PIC `NV-TUNG` / `NV-HANH`. |
+| Nếu Dừng | Không chọn ở v1; điều kiện dừng ghi trong runbook. |
+| Một bằng chứng còn thiếu | Tải giờ cao điểm thực tế và gói sự cố chưa được đo tại CP3. |
+| Ngày quyết định lại | Sau khi xử lý thẻ sự cố ở vòng 2; lịch cụ thể do nhóm chốt khi nhận thẻ. |
+| PIC ký | Trương Hoàng Tùng (trưởng nhóm), ngày 18/11/2026; xác nhận nhóm đã thống nhất phạm vi và điều kiện vận hành trước checkpoint. |
 
 Xong v1 thì lưu và đẩy một bản (sau mốc này không sửa cột v1):
 
