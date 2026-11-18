@@ -58,3 +58,21 @@ Chưa có mã commit, mã lần chạy (`runs/<mã>`) hoặc dòng phiếu đư�
 ### Exit ticket
 
 Điền sau buổi lab: một điều học được và một điều còn chưa chắc.
+
+## DoHoangPhuc-2A202603652
+
+### Phần việc phụ trách
+
+Vai Vận hành và pháp lý. Phụ trách câu 1.2 và 1.4 (Phiếu A mục A1/A2), duyệt 5 ngưỡng vận hành/pháp lý và ranh giới đầu ra (Phiếu A mục A4), câu 2.4 và 2.10 (Phiếu B mục B4 HAZOP vòng 1, B5 checklist 9 nhóm có PIC, B7.5–B7.6 Runbook phần 1–3 và Giờ cao điểm), đề xuất mục `operations` và `legal` cho `config/operating_gates.json`, phần điều tra sự cố/risk register/runbook phần 4–5 ở Phiếu C, và điền `submission/submission.json` cuối buổi.
+
+### Đóng góp cụ thể
+
+Hoàn thành mục tiêu nhìn từ kế toán đối soát (`NV-OANH`) và trưởng ca CSKH (`NV-HANH`), thiết kế telemetry production phát hiện tác hại ra bên ngoài LogiX, kiểm tra công suất ca trực/SLA/PII/chi phí để duyệt ngưỡng trong `config/acceptance_criteria.json` trước khi ký. Ở vòng 1, thực hiện HAZOP mở rộng (kỹ thuật trên `file_carrier_fault` và 4 thành phần ngoài kỹ thuật), lập checklist go-live 9 nhóm có PIC, soạn Runbook phần 1–3, phương án Giờ cao điểm và đề xuất cấu hình `operations`/`legal` theo `data/world.json`. Phần vòng 2 (Phiếu C) và `submission/submission.json` sẽ bổ sung sau khi nhận thẻ sự cố và chốt v2.
+
+### Bằng chứng
+
+Commit `9fc347d` (nhánh `phuc/form-a`) / `e17778b` (trên `main`) cho Câu 1.2 và 1.4 tại `templates/form-a-criteria.md`; nhánh `phuc/ops-round1` cho các mục `B4`, `B5`, `B7.5–B7.6` tại `templates/form-b-evaluation-gates.md` và đề xuất `operations`/`legal` cho `config/operating_gates.json`. Bổ sung commit/run ID vòng 2 và `submission.json` sau các mốc CP4–CP5.
+
+### Exit ticket
+
+Điền sau buổi lab: một điều học được và một điều còn chưa chắc.
