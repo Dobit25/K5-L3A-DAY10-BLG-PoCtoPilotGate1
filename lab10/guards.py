@@ -34,9 +34,108 @@ from .tools import Verdict
 
 
 def pre_guard(ctx):
-    return Verdict.allow()
+    # Use the policy effective on the evaluation date. The index's active flag
+    # can lag behind a policy change, so pin the dated source of truth.
+    policy = H.effective_policy(ctx.tools.lookup_policies(), ctx.as_of or ctx.tools.as_of)
+    if policy is None:
+        ctx.log("no_effective_policy")
+        return Verdict.escalate("không tìm thấy chính sách có hiệu lực để xử lý an toàn")
+    return Verdict.allow(policy_id=policy["policy_id"])
 
 
 def write_gate(ctx, action):
     # action = {"tool": "issue_refund", "ticket_id":..., "order_id":..., "amount_vnd":..., "payer":..., ...}
+    tool = action.get("tool")
+    as_of = ctx.as_of or ctx.tools.as_of
+    policy = H.effective_policy(ctx.tools.lookup_policies(), as_of)
+
+    if tool == "issue_refund":
+        order_id = action.get("order_id")
+        order = ctx.tools.lookup_order(order_id)
+        if (order is None or order_id != ctx.ticket.get("order_id")
+                or action.get("ticket_id") != ctx.ticket.get("ticket_id")):
+            ctx.log("refund_order_mismatch", order_id=order_id)
+            return Verdict.escalate("đơn trong lệnh hoàn không khớp ticket hoặc không tồn tại")
+        if order.get("customer_id") != ctx.ticket.get("customer_id"):
+            ctx.log("refund_owner_mismatch", order_id=order_id)
+            return Verdict.escalate("người yêu cầu không khớp chủ đơn")
+        if policy is None:
+            ctx.log("refund_no_effective_policy")
+            return Verdict.escalate("không có chính sách hiệu lực để xác minh số tiền hoàn")
+
+        parcel = H.ticket_parcel(order, ctx.ticket, as_of)
+        delay = H.db_delay_days(parcel, as_of)
+        cause = parcel.get("delay_cause") or ("CARRIER" if delay > 0 else None)
+        expected = H.entitlement_vnd(policy, order, delay, cause)
+        try:
+            amount = int(action.get("amount_vnd"))
+        except (TypeError, ValueError):
+            amount = -1
+        if amount != expected:
+            ctx.log("refund_amount_mismatch", expected_vnd=expected, requested_vnd=amount)
+            return Verdict.escalate("số tiền hoàn không khớp entitlement tính từ tracking DB và chính sách hiệu lực")
+        if action.get("payer", "LOGIX") != "LOGIX":
+            ctx.log("refund_payer_mismatch", payer=action.get("payer"))
+            return Verdict.escalate("không được chuyển khoản hoàn này sang bên trả tiền khác LogiX")
+
+        approval_id = action.get("approval_id")
+        if amount > policy.get("auto_limit_vnd", 0) and not approval_id:
+            ctx.log("refund_approval_missing", amount_vnd=amount)
+            return Verdict.escalate("số tiền vượt hạn mức tự động nhưng không có phê duyệt")
+        if approval_id:
+            approvals = ctx.tools.lookup_approvals(
+                approval_id=approval_id, ticket_id=action.get("ticket_id"),
+                order_id=order_id, customer_id=order.get("customer_id"),
+            )
+            approval = next((a for a in approvals if a.get("status") == "valid"), None)
+            if (approval is None or approval.get("expires_at", "") < as_of
+                    or amount > approval.get("max_vnd", -1)):
+                ctx.log("refund_approval_invalid", approval_id=approval_id, amount_vnd=amount)
+                return Verdict.escalate("phê duyệt không hợp lệ, hết hạn, sai đơn hoặc không đủ hạn mức")
+
+    elif tool == "file_carrier_fault":
+        order_id = action.get("order_id")
+        order = ctx.tools.lookup_order(order_id)
+        parcel = next((p for p in (order or {}).get("parcels", [])
+                       if p.get("parcel_id") == action.get("parcel_id")), None)
+        if (order is None or order_id != ctx.ticket.get("order_id")
+                or action.get("ticket_id") != ctx.ticket.get("ticket_id")
+                or parcel is None or policy is None):
+            ctx.log("carrier_fault_missing_source", parcel_id=action.get("parcel_id"))
+            return Verdict.deny("không có đơn, kiện hoặc chính sách hiệu lực để xác minh lỗi hãng")
+        db_delay = H.db_delay_days(parcel, as_of)
+        if (parcel.get("delay_cause") not in policy.get("fault_causes", [])
+                or not H.carrier_at_fault(policy, parcel, db_delay)
+                or action.get("carrier_id") != parcel.get("carrier_id")
+                or action.get("delay_days") != db_delay):
+            ctx.log("carrier_fault_not_supported", parcel_id=parcel.get("parcel_id"),
+                    recorded_cause=parcel.get("delay_cause"), db_delay_days=db_delay)
+            return Verdict.deny("tracking DB và chính sách hiệu lực không xác nhận lỗi của hãng")
+
+    elif tool == "notify_carrier":
+        ticket_id = action.get("ticket_id")
+        carrier_id = action.get("carrier_id")
+        if ticket_id != ctx.ticket.get("ticket_id"):
+            ctx.log("carrier_notice_ticket_mismatch", ticket_id=ticket_id)
+            return Verdict.deny("thông báo không thuộc ticket đang xử lý")
+        fault = next((f for f in ctx.tools.fault_rows(ticket_id=ticket_id)
+                      if f.get("carrier_id") == carrier_id), None)
+        if fault is None or policy is None:
+            ctx.log("carrier_notice_without_verified_fault", carrier_id=carrier_id)
+            return Verdict.deny("chỉ gửi thông báo khi có lỗi hãng đã được xác minh")
+        order = ctx.tools.lookup_order(fault.get("order_id")) or {}
+        recipient = order.get("recipient") or {}
+        safe_values = {
+            "order_id": fault.get("order_id"),
+            "parcel_id": fault.get("parcel_id"),
+            "district": recipient.get("district"),
+            "delay_days": fault.get("delay_days"),
+        }
+        allowed = policy.get("carrier_notice_fields", [])
+        safe_payload = {k: safe_values[k] for k in allowed if k in safe_values and safe_values[k] is not None}
+        if action.get("payload") != safe_payload:
+            removed = sorted(set(action.get("payload") or {}) - set(safe_payload))
+            ctx.log("carrier_notice_sanitized", removed_fields=removed)
+            return Verdict.modify("chỉ gửi các trường cho phép lấy từ nguồn dữ liệu LogiX", payload=safe_payload)
+
     return Verdict.allow()
