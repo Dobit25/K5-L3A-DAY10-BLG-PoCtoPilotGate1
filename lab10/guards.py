@@ -39,9 +39,22 @@ def pre_guard(ctx):
     if order_id:
         prior_refunds = ctx.tools.ledger_rows(order_id=order_id)
         if prior_refunds:
-            ctx.log("refund_order_already_in_ledger", order_id=order_id,
-                    prior_rows=len(prior_refunds))
-            return Verdict.escalate("đơn đã có khoản hoàn trong sổ cái; chuyển người đối soát trước khi gọi model")
+            policy_for_balance = H.effective_policy(
+                ctx.tools.lookup_policies(), ctx.as_of or ctx.tools.as_of)
+            if policy_for_balance and order.get("parcels"):
+                parcel_for_balance = H.ticket_parcel(
+                    order, ctx.ticket, ctx.as_of or ctx.tools.as_of)
+                delay_for_balance = H.db_delay_days(
+                    parcel_for_balance, ctx.as_of or ctx.tools.as_of)
+                cause_for_balance = parcel_for_balance.get("delay_cause") or (
+                    "CARRIER" if delay_for_balance > 0 else None)
+                entitlement = H.entitlement_vnd(
+                    policy_for_balance, order, delay_for_balance, cause_for_balance)
+                paid = sum(int(row.get("amount_vnd", 0)) for row in prior_refunds)
+                if paid >= entitlement:
+                    ctx.log("refund_order_already_satisfied", order_id=order_id,
+                            paid_vnd=paid, entitlement_vnd=entitlement,
+                            resolution="deny_at_write_gate")
 
     # Refuse work whose conservative full-path cost would exceed the agreed
     # per-ticket ceiling. This check uses source text length and configured
@@ -86,17 +99,21 @@ def pre_guard(ctx):
         delay = H.db_delay_days(parcel, ctx.as_of or ctx.tools.as_of)
         cause = parcel.get("delay_cause") or ("CARRIER" if delay > 0 else None)
         expected = H.entitlement_vnd(policy, order, delay, cause)
+        already_paid = sum(int(row.get("amount_vnd", 0))
+                           for row in ctx.tools.ledger_rows(order_id=order_id))
+        remaining = max(0, expected - already_paid)
         auto_limit = policy.get("auto_limit_vnd", 0)
-        if expected > auto_limit:
+        if remaining > auto_limit:
             approvals = ctx.tools.lookup_approvals(
                 ticket_id=ctx.ticket.get("ticket_id"), order_id=order_id,
                 customer_id=order.get("customer_id"),
             )
             valid_approval = next((a for a in approvals if a.get("status") == "valid"
                                    and a.get("expires_at", "") >= (ctx.as_of or ctx.tools.as_of)
-                                   and a.get("max_vnd", -1) >= expected), None)
+                                   and a.get("max_vnd", -1) >= remaining), None)
             if valid_approval is None:
                 ctx.log("refund_needs_human_approval", expected_vnd=expected,
+                        remaining_vnd=remaining,
                         auto_limit_vnd=auto_limit)
                 return Verdict.escalate("mức hoàn theo tracking và chính sách vượt hạn mức tự động; chuyển người duyệt trước khi gọi model")
     return Verdict.allow(policy_id=policy["policy_id"])
@@ -118,11 +135,6 @@ def write_gate(ctx, action):
         if order.get("customer_id") != ctx.ticket.get("customer_id"):
             ctx.log("refund_owner_mismatch", order_id=order_id)
             return Verdict.escalate("người yêu cầu không khớp chủ đơn")
-        prior_refunds = ctx.tools.ledger_rows(order_id=order_id)
-        if prior_refunds:
-            ctx.log("refund_order_already_in_ledger", order_id=order_id,
-                    prior_rows=len(prior_refunds))
-            return Verdict.escalate("đơn đã có khoản hoàn trong sổ cái; chuyển người đối soát trước khi hoàn tiếp")
         if policy is None:
             ctx.log("refund_no_effective_policy")
             return Verdict.escalate("không có chính sách hiệu lực để xác minh số tiền hoàn")
@@ -138,6 +150,13 @@ def write_gate(ctx, action):
         if amount != expected:
             ctx.log("refund_amount_mismatch", expected_vnd=expected, requested_vnd=amount)
             return Verdict.escalate("số tiền hoàn không khớp entitlement tính từ tracking DB và chính sách hiệu lực")
+        prior_paid = sum(int(row.get("amount_vnd", 0))
+                         for row in ctx.tools.ledger_rows(order_id=order_id))
+        if prior_paid >= expected:
+            ctx.log("refund_order_already_satisfied", order_id=order_id,
+                    paid_vnd=prior_paid, entitlement_vnd=expected)
+            return Verdict.deny("đơn đã được hoàn đủ; không ghi khoản hoàn trùng")
+        amount = expected - prior_paid
         if action.get("payer", "LOGIX") != "LOGIX":
             ctx.log("refund_payer_mismatch", payer=action.get("payer"))
             return Verdict.escalate("không được chuyển khoản hoàn này sang bên trả tiền khác LogiX")
@@ -179,6 +198,12 @@ def write_gate(ctx, action):
                 ctx.log("carrier_daily_auto_strike_cap", carrier_id=parcel.get("carrier_id"),
                         prior_strikes=prior_strikes, cap=strike_cap)
                 return Verdict.escalate("hãng đã chạm trần lỗi tự động trong ngày; cần người duyệt")
+
+        if prior_paid:
+            ctx.log("refund_remaining_entitlement", order_id=order_id,
+                    prior_paid_vnd=prior_paid, remaining_vnd=amount)
+            return Verdict.modify("chỉ hoàn phần quyền lợi còn lại sau các khoản đã ghi",
+                                  amount_vnd=amount)
 
     elif tool == "file_carrier_fault":
         order_id = action.get("order_id")
