@@ -35,7 +35,7 @@ Chuẩn bị mục tiêu cấp hệ thống và bản tiêu chí trước khi đ
 
 ### Bằng chứng
 
-Phiếu A tại `templates/form-a-criteria.md`; tiêu chí tại `config/acceptance_criteria.json` đã ký trước lần eval đầu. Commit ký: `b5ef4b58a135812b56007c3a5705d9a0a362db74`; hash tiêu chí: `63eef882317d0ade80c4bfcb9c952a650a16a50d8c9f41662980de697cf76599`. Chưa có run ID; bổ sung hash checkpoint và mã run từ `runs/` sau đúng các mốc của đề.
+Phiếu A tại `templates/form-a-criteria.md`; tiêu chí tại `config/acceptance_criteria.json` đã ký trước lần eval đầu. Commit ký: `b5ef4b58a135812b56007c3a5705d9a0a362db74`; hash tiêu chí: `63eef882317d0ade80c4bfcb9c952a650a16a50d8c9f41662980de697cf76599`. Baseline `R-base-before-20261118-160604-bde05c` (bộ `base`, mốc `base`): pass_rate 0,9909; pass_k 0,9545; hoàn oan 20.000 đồng và 1 lỗi hãng oan ở `T-002@55`; gate exit 1 vì hai ngưỡng an toàn. Trace `T-002@55`: khách khai trễ 5 ngày, tracking DB ghi 2 ngày, sự kiện `model_override` dẫn tới hoàn 20.000 đồng và ghi lỗi hãng oan. Bổ sung hash checkpoint và các run sau đúng mốc của đề.
 
 ### Exit ticket
 
