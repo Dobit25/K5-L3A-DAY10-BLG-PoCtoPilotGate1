@@ -89,4 +89,4 @@ Commit `9fc347d` (nhánh `phuc/form-a`) / `e17778b` (trên `main`) cho Câu 1.2 
 
 ### Sử dụng AI
 
-Chờ Phúc xác nhận có dùng AI hay không; nếu có, ghi công cụ, phần hỗ trợ và cách tự kiểm chứng. Chưa có lời xác nhận cá nhân trong bàn giao.
+Dùng trợ lý AI hỗ trợ đọc hiểu cấu trúc repo, tra cứu dữ liệu từ `data/world.json`, soát câu chữ cho các mục vận hành/pháp lý (`B4`, `B5`, `B7.5–B7.6`, `s5_ops_handoff.md`) và rà soát đối chiếu số liệu từ report trước khi bàn giao; mọi ngưỡng, phương án vận hành và quyết định v1/v2 đều tự kiểm tra theo dữ liệu bài và thống nhất cùng nhóm.
