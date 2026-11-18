@@ -404,7 +404,7 @@ Ghi các dòng đổi sau sự cố. Mỗi dòng vẫn phải có một PIC có 
 | 6 · kinh doanh | Xong trong bộ thử | S5 after: 3.980đ/ticket ≤ 8.000đ, ROI 1,51 ≥ 0,25, LLM max 765đ ≤ 1.500đ; HCM-B2B ngoài phạm vi, 18/30 ticket/ngày. | Trương Hoàng Tùng |
 | 7 · vận hành | Một phần | Một người duyệt 6 ca/giờ, S5 queue_stuck 0, monitor `llm_cost_max_per_ticket_vnd` sáng; tải giờ cao điểm thực chưa đo. | Đỗ Hoàng Phúc |
 | 8 · pháp lý | Xong trong bộ thử | `pii_leaks = 0`, `wrongful_carrier_faults = 0` ở S5 after; đối soát hãng thật vẫn cần ở pilot. | Đỗ Hoàng Phúc |
-| 9 · quyết định | Chờ nhóm ký v2 | C12 có khuyến nghị dựa trên grade/gate sau tích hợp; hash tiêu chí và checkpoint không đổi. | Trương Hoàng Tùng |
+| 9 · quyết định | Xong | C12 đã ký v2 theo ủy quyền trưởng nhóm, hai review đã ghi nhận; grade cuối integrity xanh, tiêu chí và checkpoint không đổi. | Trương Hoàng Tùng |
 
 ### Runbook 4 · Sau sự cố trên thẻ (vòng 2)
 
@@ -441,7 +441,7 @@ Cột v1 nằm ở Phiếu B mục B8; không sửa cột đó.
 | Mã lần chạy dùng làm bằng chứng | S5 base `R-S5-before-20261118-173601-4fa077` · prepared `R-S5-prepared-20261118-173601-4fa077` · after `R-S5-after-20261118-173601-4fa077`; grade `R-S5-grade-20261118-173600-4fa077`; bộ nền sau sửa `R-base-after-20261118-173610-4fa077`. |
 | Còn dòng "vượt trần" nào trong report? | Không. S5 after: pass_rate/pass_k 1,0; hoàn oan, lỗi hãng oan, PII, queue_stuck đều 0; LLM max 765đ < 1.500đ, chi phí 3.980đ/ticket < 8.000đ, ROI 1,51 > 0,25, escalation 0,1667 < 0,35. |
 | Kho hoặc hãng có số xấu nhất | Trong pilot after: HN 4.277đ/ticket, không có hoàn oan/lỗi hãng oan; HCM-B2B ở base 11.326đ/ticket > làm tay nên vẫn ngoài pilot. Nếu chỉ nhìn HCM-B2B, không mở tự động hóa cho kho này. |
-| Quyết định (khoanh một) | **Đề xuất Tiếp tục** pilot trên HN/HCM/CT/DN, giữ HCM-B2B làm tay; **chờ cả nhóm phê duyệt và Tùng ký v2**. |
+| Quyết định (khoanh một) | **Tiếp tục** pilot trên HN/HCM/CT/DN, giữ HCM-B2B làm tay; trưởng nhóm đã phê duyệt và ký v2 theo các bằng chứng dưới đây. |
 | Bằng chứng 1: mã lần chạy + chỉ số bắt buộc nào đạt / chưa | `R-S5-after-20261118-173601-4fa077`: 90/90 trial pass, không có hoàn oan/lỗi hãng oan/PII; gate so S5 base exit 0, không có ca mới hỏng. |
 | Bằng chứng 2 | Cùng run: 18/30 ticket/ngày trong phạm vi (độ phủ 0,6), 3.980đ/ticket, ROI 1,51, 108.357đ tiết kiệm ròng/ngày, 1 người duyệt, queue_stuck 0. |
 | Bằng chứng 3 | `R-base-after-20261118-173610-4fa077`: 110/110 trial pass, 4.493đ/ticket, ROI 1,23; grade integrity/criteria/visible/regression/monitor đều xanh, chưa có test ẩn. |
@@ -450,13 +450,17 @@ Cột v1 nằm ở Phiếu B mục B8; không sửa cột đó.
 | Nếu Cải tiến thêm: giả thuyết cụ thể (nhánh nào của fault tree) + hạn | Không chọn trên bộ thử hiện tại; nếu ledger hai kênh đồng bộ chậm hoặc tải giờ cao điểm vượt SLA, quay lại cổng và đánh giá lại trước mở rộng. |
 | Nếu Dừng: bài học ghi lại | Không chọn; nếu hoàn oan/lỗi hãng oan/PII tái xuất hiện thì kích hoạt dừng theo runbook. |
 | Ngày quyết định lại (trừ khi Dừng) | Sau một tuần pilot giới hạn, dự kiến 25/11/2026; đối chiếu ledger và tải thực trước Bước đánh giá 2. |
-| PIC ký | **Chờ Trương Hoàng Tùng ký sau khi Tuyên và Phúc duyệt run cuối.** |
+| PIC ký | Trương Hoàng Tùng, ngày 18/11/2026; ký v2 theo ủy quyền trực tiếp trong phiên làm việc sau review của Tuyên/Phúc và grade kiểm chứng integrity xanh. |
 
 **Chỉ ở v2**
+
+**Hồ sơ review và xác minh cuối:** Tuyên review commit `36d1747`: S5-02/20 bị từ chối, S5-21 hoàn đúng 12.000đ, S5-70 chuyển người trước LLM; 13/13 tests, bộ nền không có ca mới hỏng. Tuyên cung cấp run eval `R-S5-after-20261118-195116-f084e2` và grade `R-S5-grade-20261118-195151-f084e2` qua trưởng nhóm, có lưu ý integrity fail. File report gốc của hai run này chưa có trong clone/nhánh remote nên chưa thể đối chiếu danh sách file sai hoặc kết luận nguyên nhân trên máy Tuyên. Phúc duyệt cấu hình, C4/C10/C11, đối soát ledger trong 24h và runbook giữ nguyên switches.json; đồng ý Tiếp tục bốn kho theo run `R-S5-grade-20261118-173600-4fa077`. Hai review được trưởng nhóm chuyển nguyên ý trong phiên làm việc.
+
+**Kiểm chứng trên bản cuối `36d1747`:** grade `R-S5-grade-20261118-215041-4fa077`, base `R-S5-before-20261118-215043-4fa077`, prepared `R-S5-prepared-20261118-215043-4fa077`, after `R-S5-after-20261118-215043-4fa077`: PASS-VISIBLE; integrity, criteria, visible, regression, monitor đều xanh, không có file khóa bị đổi. Hash code `4fa077274974` khác hash `f084e2` trong báo cáo Tuyên, nên không coi hai lượt chạy là cùng bytes. Trưởng nhóm cho phép ký dựa trên bản cuối đã kiểm chứng tại clone chuẩn; test ẩn chưa chạy.
 - Đề xuất đổi từ v1 **Thu hẹp HN/HCM** sang v2 **Tiếp tục pilot bốn kho bán lẻ**: độ phủ S5 tăng 0,3333 → 0,6, ROI 0,06 → 1,51, tiền hoàn oan và lỗi hãng oan về 0.
 - Report tự kiểm tra `R-S5-grade-20261118-173600-4fa077`: visible/integrity/criteria/regression/monitor đều xanh; chưa có test ẩn trên máy.
 - Cổng vòng 1 đã loại HCM-B2B lỗ và giữ PII 0, nhưng bỏ sót ledger hoàn tay, ticket dài và phân biệt hoàn đủ với hoàn một phần.
-- Report ghi **“Được phép cân nhắc Tiếp tục”**; khuyến nghị trên khớp report, chờ chữ ký nhóm trước khi thành quyết định chính thức.
+- Report ghi **“Được phép cân nhắc Tiếp tục”**; trưởng nhóm đã ký quyết định Tiếp tục theo bằng chứng kiểm chứng cuối và hai review được ghi nhận.
 - Chưa đo được độ trễ đồng bộ ledger giữa CSKH và agent, bảng giá LLM thực và tải giờ cao điểm; nếu khác mock, ROI/SLA và khả năng chặn hoàn trùng phải đo lại.
 
 **Ba dòng bắt buộc** (chép nguyên ba câu này sang `submission/submission.json`, mục `three_lines`)

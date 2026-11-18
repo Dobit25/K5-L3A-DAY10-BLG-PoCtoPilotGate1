@@ -1,12 +1,12 @@
 {
-  "team": "",
-  "members": [],
-  "incident": "",
-  "decision_v1": "",
-  "decision_v2": "",
+  "team": "K5-L3A-DAY10-BLG-PoCtoPilotGate1",
+  "members": ["Trương Hoàng Tùng", "Giáp Mạnh Tuyên", "Đỗ Hoàng Phúc"],
+  "incident": "S5",
+  "decision_v1": "Thu hẹp",
+  "decision_v2": "Tiếp tục",
   "three_lines": {
-    "environment_assumption": "",
-    "reduce_or_prevent": "",
-    "measure_in_pilot": ""
+    "environment_assumption": "Mọi khoản hoàn từ CSKH và agent được ghi đủ, gần thời gian thực vào cùng ledger theo order_id.",
+    "reduce_or_prevent": "Cổng ghi ngăn hoàn vượt entitlement đã thấy trong ledger và chặn tiền máy dự báo vượt 1.500đ theo bảng giá hiện có; với ledger cập nhật chậm hoặc bảng giá đổi, nó chỉ giảm khả năng tác hại, không bảo đảm ngăn tuyệt đối.",
+    "measure_in_pilot": "Đo lại độ trễ đồng bộ hoàn tay, tỷ lệ trùng theo đơn, chi phí/token LLM thực, tải duyệt giờ cao điểm, ROI và SLA theo từng kho trước Bước đánh giá 2."
   }
 }
