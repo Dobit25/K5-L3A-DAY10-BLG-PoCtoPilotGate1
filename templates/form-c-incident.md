@@ -445,7 +445,7 @@ Cột v1 nằm ở Phiếu B mục B8; không sửa cột đó.
 | Bằng chứng 1: mã lần chạy + chỉ số bắt buộc nào đạt / chưa | `R-S5-after-20261118-173601-4fa077`: 90/90 trial pass, không có hoàn oan/lỗi hãng oan/PII; gate so S5 base exit 0, không có ca mới hỏng. |
 | Bằng chứng 2 | Cùng run: 18/30 ticket/ngày trong phạm vi (độ phủ 0,6), 3.980đ/ticket, ROI 1,51, 108.357đ tiết kiệm ròng/ngày, 1 người duyệt, queue_stuck 0. |
 | Bằng chứng 3 | `R-base-after-20261118-173610-4fa077`: 110/110 trial pass, 4.493đ/ticket, ROI 1,23; grade integrity/criteria/visible/regression/monitor đều xanh, chưa có test ẩn. |
-| Khớp dòng nào trong `decision_rule` đã ký? | Dòng **Tiếp tục** khi mọi ngưỡng required/business_ops đạt ở bộ nền và S5, phạm vi pilot còn giá trị. Bản sau sửa đáp ứng trên dữ liệu mock; cần nhóm ký và theo dõi giới hạn pilot thật. |
+| Khớp dòng nào trong `decision_rule` đã ký? | Dòng **Tiếp tục** khi mọi ngưỡng required/business_ops đạt ở bộ nền và S5, phạm vi pilot còn giá trị. Trưởng nhóm đã ký dựa trên hai review và grade cuối; tiếp tục theo dõi giới hạn pilot thật. |
 | Nếu Thu hẹp: cắt kho nào / còn bao nhiêu phần trăm / mấy người trực, và ticket bị cắt đi đâu | Không chọn Thu hẹp mới; giữ HCM-B2B ngoài phạm vi như v1, 12/30 ticket S5/ngày đi thẳng quy trình CSKH làm tay. Pilot 18/30, 1 người duyệt. |
 | Nếu Cải tiến thêm: giả thuyết cụ thể (nhánh nào của fault tree) + hạn | Không chọn trên bộ thử hiện tại; nếu ledger hai kênh đồng bộ chậm hoặc tải giờ cao điểm vượt SLA, quay lại cổng và đánh giá lại trước mở rộng. |
 | Nếu Dừng: bài học ghi lại | Không chọn; nếu hoàn oan/lỗi hãng oan/PII tái xuất hiện thì kích hoạt dừng theo runbook. |
