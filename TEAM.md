@@ -5,7 +5,7 @@
 - Tên nhóm (`TenNhom`, không dấu, không khoảng trắng): `BLG`
 - Lớp: `L3A`
 - Repo của bàn: `K5-L3A-DAY10-BLG-PoCtoPilotGate1`
-- Thẻ sự cố đã bốc (S1–S8):
+- Thẻ sự cố đã bốc (S1–S8): Chưa bốc
 
 ## Thành viên
 
@@ -13,10 +13,9 @@ Họ tên đầy đủ và MSSV của **mọi** thành viên; thêm dòng nếu 
 
 | STT | Họ và tên | MSSV | Vai | Trưởng nhóm |
 | --: | --------- | ---- | --- | :---------: |
-|   1 |    Trương Hoàng Tùng       |   2A202603651   |  Sản phẩm và kinh doanh   |      Trưởng nhóm       |
-|   2 |      Giáp Mạnh Tuyên     |  2A202603648    |  Kỹ sư cổng   |     Thành viên        |
-|   3 |     Đỗ Hoàng Phúc      |    2A202603652  |   Vận hành và pháp lý  |       Thành viên      |
-
+|   1 | Trương Hoàng Tùng | 2A202603651 | Sản phẩm và kinh doanh | Trưởng nhóm |
+|   2 | Giáp Mạnh Tuyên | 2A202603648 | Kỹ sư cổng | Thành viên |
+|   3 | Đỗ Hoàng Phúc | 2A202603652 | Vận hành và pháp lý | Thành viên |
 
 Ghi `members` trong `submission/submission.json` theo dạng `"HoVaTen-MSSV"`, khớp bảng trên.
 
@@ -41,3 +40,21 @@ Hiện có bản nháp Phiếu A tại `templates/form-a-criteria.md` và tiêu 
 ### Exit ticket
 
 Tùng tự ghi một điều học được và một điều còn chưa chắc sau buổi lab; chưa thể điền trước khi thực hiện và demo.
+
+## GiapManhTuyen-2A202603648
+
+### Phần việc phụ trách
+
+Kỹ sư cổng. Theo kế hoạch nhóm: kiểm tra code/CLI ở CP1; đề xuất cách tính metric ở CP2; phân tích baseline và trace, thiết kế 2–3 cổng phòng ngừa trong CP3; sửa cổng theo thẻ sự cố đã bốc và thêm monitor ở CP4. Phụ trách ghi trực tiếp `lab10/guards.py` và `lab10/monitors.py`; gửi run ID, trace và nội dung kỹ thuật cho trưởng nhóm tích hợp vào các phiếu.
+
+### Đóng góp cụ thể
+
+Chưa ghi nhận; cập nhật sau khi hoàn thành các phần việc trong buổi lab.
+
+### Bằng chứng
+
+Chưa có mã commit, mã lần chạy (`runs/<mã>`) hoặc dòng phiếu được xác nhận; bổ sung sau khi thực hiện.
+
+### Exit ticket
+
+Điền sau buổi lab: một điều học được và một điều còn chưa chắc.
