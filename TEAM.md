@@ -62,11 +62,11 @@ Commit S5 `a56d7b5` trên `tuyen/guards-s5`, tích hợp qua `ff50974`. Review `
 
 ### Exit ticket
 
-Chờ Tuyên xác nhận nội dung tự đánh giá. Gợi ý theo công việc thực tế (chưa phải lời tự khai): điều học được — chống hoàn trùng phải xét quyền lợi còn lại để không chặn hoàn một phần hợp lệ; điều còn chưa chắc — ledger đồng bộ chậm và xử lý đồng thời ảnh hưởng cổng thế nào.
+Tôi học được rằng chống hoàn trùng phải dựa trên quyền lợi còn lại trong ledger: từ chối khoản đã hoàn đủ nhưng vẫn cho phép hoàn đúng phần thiếu, như S5-02/20 và S5-21. Điều tôi còn chưa chắc là độ trễ đồng bộ giữa các kênh và hai yêu cầu đồng thời có thể khiến guard đọc trạng thái cũ hay không; cần đo và thử tình huống race condition trong pilot thật.
 
 ### Sử dụng AI
 
-Chờ Tuyên xác nhận có dùng AI hay không; nếu có, ghi công cụ, phần hỗ trợ và cách tự kiểm chứng. Chưa có lời xác nhận cá nhân trong bàn giao.
+Tôi có dùng Codex để hỗ trợ đọc cấu trúc repo, lần theo trace S5, rà logic guard/monitor, chỉnh sửa mã và chạy kiểm chứng. Tôi đối chiếu kết quả với ledger và các ca S5-02/20, S5-21, S5-70, xem public tests (13/13), bộ nền và grade report; tôi cũng ghi rõ giới hạn khi run của máy mình báo lỗi integrity và không coi nó là cùng bytes với grade cuối trên clone chuẩn. Các quyết định và kết luận cuối được đối chiếu với mã, trace và report của bài.
 
 ## DoHoangPhuc-2A202603652
 
