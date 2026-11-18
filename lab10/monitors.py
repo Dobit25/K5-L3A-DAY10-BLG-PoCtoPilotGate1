@@ -19,7 +19,13 @@ def escalation_rate(trials):
     return sum(t["status"] == "escalated" for t in trials) / max(1, len(trials))
 
 
+def llm_cost_max_per_ticket_vnd(trials):
+    """Expose the worst per-ticket spend so an over-ceiling run is visible."""
+    return max((t.get("cost_vnd", 0) for t in trials), default=0)
+
+
 MONITORS = {
     "escalation_rate": escalation_rate,     # có sẵn; KHÔNG tính là metric mới của đội
+    "llm_cost_max_per_ticket_vnd": llm_cost_max_per_ticket_vnd,
 }
 STARTER_MONITORS = ("escalation_rate",)

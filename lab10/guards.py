@@ -34,12 +34,71 @@ from .tools import Verdict
 
 
 def pre_guard(ctx):
+    order = ctx.tools.lookup_order(ctx.ticket.get("order_id")) or {}
+    order_id = order.get("order_id")
+    if order_id:
+        prior_refunds = ctx.tools.ledger_rows(order_id=order_id)
+        if prior_refunds:
+            ctx.log("refund_order_already_in_ledger", order_id=order_id,
+                    prior_rows=len(prior_refunds))
+            return Verdict.escalate("đơn đã có khoản hoàn trong sổ cái; chuyển người đối soát trước khi gọi model")
+
+    # Refuse work whose conservative full-path cost would exceed the agreed
+    # per-ticket ceiling. This check uses source text length and configured
+    # prices before any LLM call, so long customer attachments cannot run up
+    # an unbounded bill before a write-time gate gets control.
+    limits = ctx.tools.ops_limits()
+    facts = ctx.tools.ops_facts()
+    ceiling = limits.get("max_llm_cost_per_ticket_vnd")
+    prices = facts.get("llm_cost", {})
+    if ceiling is not None:
+        def extract_cost(text):
+            return prices.get("extract_base_vnd", 0) + (
+                len(text or "") // 4 * prices.get("extract_per_4_chars_vnd", 0)
+            )
+
+        estimate = ctx.cost_vnd + extract_cost(ctx.ticket.get("text", ""))
+        if order.get("checkout_note"):
+            estimate += extract_cost(order["checkout_note"])
+        # A policy check may be retried once; successful refund paths can also
+        # incur a confirmation and a configured decision note.
+        estimate += 2 * prices.get("policy_check_vnd", 0)
+        estimate += prices.get("confirm_vnd", 0)
+        if ctx.gates.get("operations", {}).get("decision_note"):
+            estimate += prices.get("decision_note_vnd", 0)
+        if estimate > ceiling:
+            ctx.log("llm_cost_estimate_over_ceiling", estimate_vnd=estimate,
+                    ceiling_vnd=ceiling)
+            return Verdict.escalate("chi phí tối đa ước tính vượt trần LLM mỗi ticket; chuyển người trước khi gọi model")
+
     # Use the policy effective on the evaluation date. The index's active flag
     # can lag behind a policy change, so pin the dated source of truth.
     policy = H.effective_policy(ctx.tools.lookup_policies(), ctx.as_of or ctx.tools.as_of)
     if policy is None:
         ctx.log("no_effective_policy")
         return Verdict.escalate("không tìm thấy chính sách có hiệu lực để xử lý an toàn")
+
+    # Route refunds requiring human approval before paying for an LLM pass.
+    # The estimate is derived from tracking, policy and the approval table;
+    # no ticket ID or customer wording controls this decision.
+    if order and order.get("parcels"):
+        parcel = H.ticket_parcel(order, ctx.ticket, ctx.as_of or ctx.tools.as_of)
+        delay = H.db_delay_days(parcel, ctx.as_of or ctx.tools.as_of)
+        cause = parcel.get("delay_cause") or ("CARRIER" if delay > 0 else None)
+        expected = H.entitlement_vnd(policy, order, delay, cause)
+        auto_limit = policy.get("auto_limit_vnd", 0)
+        if expected > auto_limit:
+            approvals = ctx.tools.lookup_approvals(
+                ticket_id=ctx.ticket.get("ticket_id"), order_id=order_id,
+                customer_id=order.get("customer_id"),
+            )
+            valid_approval = next((a for a in approvals if a.get("status") == "valid"
+                                   and a.get("expires_at", "") >= (ctx.as_of or ctx.tools.as_of)
+                                   and a.get("max_vnd", -1) >= expected), None)
+            if valid_approval is None:
+                ctx.log("refund_needs_human_approval", expected_vnd=expected,
+                        auto_limit_vnd=auto_limit)
+                return Verdict.escalate("mức hoàn theo tracking và chính sách vượt hạn mức tự động; chuyển người duyệt trước khi gọi model")
     return Verdict.allow(policy_id=policy["policy_id"])
 
 
@@ -59,6 +118,11 @@ def write_gate(ctx, action):
         if order.get("customer_id") != ctx.ticket.get("customer_id"):
             ctx.log("refund_owner_mismatch", order_id=order_id)
             return Verdict.escalate("người yêu cầu không khớp chủ đơn")
+        prior_refunds = ctx.tools.ledger_rows(order_id=order_id)
+        if prior_refunds:
+            ctx.log("refund_order_already_in_ledger", order_id=order_id,
+                    prior_rows=len(prior_refunds))
+            return Verdict.escalate("đơn đã có khoản hoàn trong sổ cái; chuyển người đối soát trước khi hoàn tiếp")
         if policy is None:
             ctx.log("refund_no_effective_policy")
             return Verdict.escalate("không có chính sách hiệu lực để xác minh số tiền hoàn")
